@@ -7,6 +7,7 @@ import sys
 
 USEREPLAYID = False
 PRINTTIMELINE = False
+PERIOD_NO = 1
 
 # 고정 스펙
 dR = 826.5 # 데미지, 보스 데미지, 상추뎀
@@ -130,10 +131,17 @@ with open('nickname.txt', encoding = 'UTF-8') as file:
             urlString = "https://open.api.nexon.com/maplestory/v1/battle-practice/replay-id?ocid=" + ocid
             response = requests.get(urlString, headers = headers)
             
-            if 'replay_id' not in response.json():
+            if 'replay_list' not in response.json():
                 print("ERROR:", characterName, "의 리플레이가 존재하지 않습니다.")
                 continue
-            replay_id = response.json()['replay_id']
+            replay_id = None
+            for rl in response.json()['replay_list']:
+                if rl['period_no'] == PERIOD_NO:
+                    replay_id = rl['replay_id']
+                    break
+            if replay_id == None:
+                print("ERROR:", characterName, "의 리플레이가 존재하지 않습니다.")
+                continue
         res[3] = replay_id
 
         urlString = "https://open.api.nexon.com/maplestory/v1/battle-practice/character-info?replay_id=" + replay_id
@@ -410,11 +418,11 @@ with open('nickname.txt', encoding = 'UTF-8') as file:
             elif skillName == '스파이더 인 미러':
                 damageSkill.append((17, time))
                 for i in range(6):
-                    damageSkill.append((18, time + 2630 + i * 8850))
-                    damageSkill.append((18, time + 3530 + i * 8850))
-                    damageSkill.append((18, time + 4380 + i * 8850))
-                    damageSkill.append((18, time + 5130 + i * 8850))
-                    damageSkill.append((18, time + 5780 + i * 8850))
+                    damageSkill.append((18, time + 2700 + i * 8850))
+                    damageSkill.append((18, time + 3600 + i * 8850))
+                    damageSkill.append((18, time + 4450 + i * 8850))
+                    damageSkill.append((18, time + 5200 + i * 8850))
+                    damageSkill.append((18, time + 5850 + i * 8850))
                 if HekateUntil < time and HekateSince < time:
                     HekateSince = time
                 HekateUntil = max(HekateUntil, time + 5000)
@@ -532,7 +540,7 @@ with open('nickname.txt', encoding = 'UTF-8') as file:
         for i in range(3):
             plt.axvline(x = ascent[i], color = 'pink', linestyle = 'dashed')
         plt.bar(timepoint, partial_score, width = (end - start) / 340000, color = 'black')
-        plt.bar(timepoint, partial_autoscore, width = (end - start) / 340000, color = 'green')
+        #plt.bar(timepoint, partial_autoscore, width = (end - start) / 340000, color = 'green')
         plt.xticks([x * 30 for x in range(13)])
         if PRINTTIMELINE:
             plt.show()
