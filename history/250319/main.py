@@ -12,7 +12,7 @@ PERIOD_NO = 1
 # 고정 스펙
 dR = 826.5 # 데미지, 보스 데미지, 상추뎀
 madR = 144
-mobpdpR = 3.8 * 0.0102 # 98.98%
+mobpdpR = 3.8 * 0.009282 # 99.0718%
 criticalDamage = 165.15
 bufftimeR = 71
 summonTimeR = 40
