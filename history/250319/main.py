@@ -10,15 +10,12 @@ PRINTTIMELINE = False
 PERIOD_NO = 1
 
 # 고정 스펙
-dR = 826.5 # 데미지, 보스 데미지, 상추뎀
+dR = 830.5 # 데미지, 보스 데미지, 상추뎀
 madR = 144
 mobpdpR = 3.8 * 0.009282 # 99.0718%
 criticalDamage = 165.15
 bufftimeR = 71
 summonTimeR = 40
-
-dR += 4 # 와헌 유니온
-mobpdpR *= 0.91 # 모법 링크
 
 dR = 100 + dR
 madR = 100 + madR
