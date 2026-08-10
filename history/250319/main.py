@@ -5,51 +5,80 @@ import numpy as np
 import requests
 import sys
 
-USEREPLAYID = False
+USEREPLAYID = True
 PRINTTIMELINE = False
-PERIOD_NO = 1
+PERIOD_NO = 2
 
 # 고정 스펙
-dR = 830.5 # 데미지, 보스 데미지, 상추뎀
+INT = 7064
+INTR = 651
+INTX = 31050
+LUK = 3738
+LUKR = 197
+LUKX = 590
+mad = 4238
 madR = 144
-mobpdpR = 3.8 * 0.009282 # 99.0718%
-criticalDamage = 165.15
+dR = 825.50 # 데미지, 보스 데미지, 상추뎀
+mobpdpR = 3.8 * 0.009288009 # 99.0712%
+criticalDamage = 166.10
 bufftimeR = 71
 summonTimeR = 40
+
+# 어센트 스펙
+AINT = 6143
+AINTR = 497
+AINTX = 31050
+ALUK = 3066
+ALUKR = 161
+ALUKX = 590
+Amad = 3661
+AmadR = 120
+AdR = 584.00 # 데미지, 보스 데미지, 상추뎀
+AmobpdpR = 3.8 * 0.05050899 # 94.9491%
+AcriticalDamage = 104.90
 
 dR = 100 + dR
 madR = 100 + madR
 cdR = 135 + criticalDamage
 
+AdR = 160 + AdR
+AmadR = 100 + AmadR
+AcdR = 135 + AcriticalDamage
+
+stat_multiplier = ((INT * (1 + INTR / 100) + INTX) * 4 + (LUK * (1 + LUKR / 100) + LUKX)) / 100 * mad * 0.985 * 1.20 * 1.20 * 0.525 * 5.320610064 / 100
 base_multiplier = dR * madR * cdR * (1 - mobpdpR)
+
+Astat_multiplier = ((AINT * (1 + AINTR / 100) + AINTX) * 4 + (ALUK * (1 + ALUKR / 100) + ALUKX)) / 100 * Amad * 0.98 * 1.20 * 1.20 * 2.0878 / 100
+Abase_multiplier = AdR * AmadR * AcdR
 
 # 0 정뿌, 1 강분출, 2 바람분출, 3 해분출, 4 장판, 5 화산탄,
 # 6 씨앗, 7 잠깨, 8 강흡수, 9 바람흡수, 10 해흡수, 11 넝쿨타래,
 # 12 큰기지개, 13 해강산1타, 14 해강산2타, 15 용솟음, 16 산등성이,
 # 17 스인미 1타, 18 스인미 2타, 19 크오솔 1타, 20 크오솔 2타,
 # 21 꽃누리1타, 22 꽃누리2타,
-# 23 헤카테, 24 스틱스1타, 25 스틱스2타, 26 스틱스3타, 27 플레게톤1타, 28 플레게톤2타
+# 23 헤카테, 24 스틱스1타, 25 스틱스2타, 26 스틱스3타, 27 플레게톤1타, 28 플레게톤2타, 29 화중군자
 # 솔 헤카테 : 플레게톤은 해 강 산 바람에 감응시킨다.
 
 damage = [4821, 10396.575, 4190.508, 3825.36, 1025.892, 9598.176,
           1369, 21160, 5385.105, 901.692, 5142.984, 2802,
           174960, 11200, 246600/11, 10880, 3200,
-          6250, 35000/27, 25000/3, 13750/9,
+          152500/11, 854000/297, 1830500/99, 30500/9,
           73500/11, 96950/11,
-          80000/9, 1957000/297, 727000/297, 224000/27, 42500/27, 302000/99]
+          80000/9, 1957000/297, 727000/297, 140000/27, 42500/27, 302000/99, 1121750 / 891]
+damage_ascent = 8435 * 14
 
 dRS = [0, 25 + summonTimeR / 2, 25 + summonTimeR / 2, 25 + summonTimeR / 2, 25 + summonTimeR / 2, 25 + summonTimeR / 2,
        60, 0, 25, 25, 25, 0,
        0, 0, 0, 0, 0,
        0, 0, 0, 0,
        50, 50,
-       40, 40, 40, 40, 40, 40]
+       40, 40, 40, 40, 40, 40, 0]
 mobpdpRS = [0.8, 0.68, 0.68, 0.68, 0.68, 0.68,
             0.8, 0.8, 0.68, 0.68, 0.68, 0.8,
             1, 1, 1, 1, 1,
             1, 1, 1, 1,
             0.5, 0.5,
-            0.6, 0.6, 0.6, 0.6, 0.6, 0.6]
+            0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 1]
 
 # get file
 headers = {
@@ -74,20 +103,20 @@ if PRINTTIMELINE:
                 '큰기지개', '해강산', '해강산2', '용솟음', '산등성이',
                 '스인미1', '스인미2', '크오솔1', '크오솔2',
                 '꽃누리1', '꽃누리2',
-                '헤카테', '스틱스1', '스틱스2', '스틱스3', '플레게톤1', '플레게톤2']
+                '헤카테', '스틱스1', '스틱스2', '스틱스3', '플레게톤1', '플레게톤2', '화중군자']
     wrTL.writerow(['스킬', '시각'])
 
-res = [0, '닉네임', 'OCID', '리플레이 ID', '리레', '쿨감', '시간', '점수', '유효']
-detail = [0, '닉네임', '정뿌', '강분출', '바람분출', '해분출',
+res = [0, '닉네임', 'OCID', '리플레이 ID', '리레', '쿨감', '시간', '데미지', 'DPS', '점수', '유효']
+detail = [0, '닉네임', '일필', '정뿌', '강분출', '바람분출', '해분출',
           '씨앗', '잠깨', '강흡수', '바람흡수', '해흡수', '넝쿨타래',
           '큰기지개', '해강산', '용솟음', '산등성이', '스인미', '크오솔',
-          '꽃누리', '헤카테', '스틱스', '플레게톤']
-indetail = [2, 3, 4, 5, 5, 5,
-            6, 7, 8, 9, 10, 11,
-            12, 13, 13, 14, 15,
-            16, 16, 17, 17,
-            18, 18,
-            19, 20, 20, 20, 21, 21]
+          '꽃누리', '헤카테', '스틱스', '플레게톤', '화중군자']
+indetail = [3, 4, 5, 6, 6, 6,
+            7, 8, 9, 10, 11, 12,
+            13, 14, 14, 15, 16,
+            17, 17, 18, 18,
+            19, 19,
+            20, 21, 21, 21, 22, 22, 23]
 
 if USEREPLAYID:
     ocids = []
@@ -110,7 +139,7 @@ with open('nickname.txt', encoding = 'UTF-8') as file:
         detail[0] += 1
         for i in range(1, 9):
             res[i] = ''
-        for i in range(1, 22):
+        for i in range(1, 24):
             detail[i] = 0
         res[1] = detail[1] = characterName = line.rstrip()
         
@@ -147,7 +176,7 @@ with open('nickname.txt', encoding = 'UTF-8') as file:
         if 'stat_object' not in response.json():
             print("ERROR:", characterName, "의 캐릭터 정보를 불러올 수 없습니다.")
             continue
-        res[8] = True
+        res[10] = True
         
         character_info = response.json()
         stat = character_info['stat_object']['basic_stat_object']['final_stat']
@@ -255,7 +284,7 @@ with open('nickname.txt', encoding = 'UTF-8') as file:
                   True, True, True, True, True,
                   True, False, True, False,
                   True, True,
-                  False, True, False, False, False, False]
+                  False, True, False, False, False, False, False]
         HekateUntil = -1
         HekateSince = 0
         
@@ -356,6 +385,7 @@ with open('nickname.txt', encoding = 'UTF-8') as file:
             elif skillName == '큰 기지개':
                 skillRemain[5] -= 1
                 if skillRemain[5] < 0:
+                    print('경고 : 큰 기지개를 7회 사용했습니다.')
                     continue # 6회 제한 적용
                 damageSkill.append((12, time + 1320))
                 HekateUntil = max(HekateUntil, time + 5000)
@@ -379,6 +409,7 @@ with open('nickname.txt', encoding = 'UTF-8') as file:
             elif skillName == '산등성이 굽이굽이':
                 skillRemain[6] -= 1
                 if skillRemain[6] < 0:
+                    print('경고 : 산등성이 굽이굽이를 7회 사용했습니다.')
                     continue # 6회 제한 적용
                 for i in range(20):
                     damageSkill.append((16, time + 1620 + i * 240))
@@ -404,6 +435,7 @@ with open('nickname.txt', encoding = 'UTF-8') as file:
             elif skillName == '솔 헤카테 : 스틱스':
                 skillRemain[7] -= 1
                 if skillRemain[7] < 0:
+                    print('경고 : 솔 헤카테 : 스틱스를 7회 사용했습니다.')
                     continue # 6회 제한 적용
                 damageSkill.append((24, time))
                 for i in range(4):
@@ -448,9 +480,29 @@ with open('nickname.txt', encoding = 'UTF-8') as file:
         for mountainSeedTurn in range(3):
             for i in range(14):
                 damageSkill.append((6, mountainSeed[mountainSeedTurn] + 990 + i * 2000))
-
-        damageSkill.sort(key = lambda x: x[1])        
+        
+        damageSkill.sort(key = lambda x: x[1])
+        # 화중군자 추가
+        Resurrection = [True, False, False, False, False, False,
+                  False, False, False, False, False, True,
+                  False, True, True, True, True,
+                  False, False, False, False,
+                  True, True,
+                  False, False, False, False, False, False, False]
+        ResurrectionSince = 0
+        for tl in damageSkill:
+            if Resurrection[tl[0]] and ResurrectionSince <= tl[1]:
+                damageSkill.append((29, tl[1] + 90))
+                damageSkill.append((29, tl[1] + 90))
+                damageSkill.append((29, tl[1] + 90))
+                damageSkill.append((29, tl[1] + 690))
+                damageSkill.append((29, tl[1] + 690))
+                damageSkill.append((29, tl[1] + 1290))
+                ResurrectionSince = tl[1] + 3760
+        damageSkill.sort(key = lambda x: x[1])
+        
         damageSkill = list(filter(lambda x: x[1] >= start and x[1] < end, damageSkill))
+        
         if PRINTTIMELINE:
             for x in damageSkill:
                 wrTL.writerow([skillstr[x[0]], x[1]])
@@ -461,7 +513,7 @@ with open('nickname.txt', encoding = 'UTF-8') as file:
                        True, True, True, True, True,
                        True, False, True, False,
                        True, True,
-                       False, False, False, False, False, False]
+                       False, False, False, False, False, False, False]
 
         maxft = 0
         maxscore = 0
@@ -494,18 +546,21 @@ with open('nickname.txt', encoding = 'UTF-8') as file:
                 if score > maxscore:
                     maxscore = score
                     maxft = ft
+        res[7] = int(maxscore * stat_multiplier * base_multiplier / 1000000 + damage_ascent * Astat_multiplier * Abase_multiplier / 1000000 * 63)
+        res[8] = res[7] * 1000 // (end - start)
         maxscore *= 340000 / (end - start)
         print("최종 점수:", int(maxscore), "점")
         print("일격필살 시점:", maxft, "ms")
-        res[7] = int(maxscore)
+        detail[2] = maxft
+        res[9] = int(maxscore)
         if end - start > 360000:
-            res[8] = False
+            res[10] = False
             print("평가 시간이 6분을 초과했습니다.")
         
         # 실제 계산
         FatalTime = maxft
         partial_score = [0 for x in range(340)]
-        partial_autoscore = [0 for x in range(340)]
+        partial_addscore = [0 for x in range(340)]
         for tl in damageSkill:
             if FatalStrike[tl[0]] and tl[1] >= FatalTime:
                 FatalTime = tl[1] + 30000
@@ -513,21 +568,22 @@ with open('nickname.txt', encoding = 'UTF-8') as file:
             multiplier = (dR + dRS[tl[0]] + dRA[tl[1]] + Fatal * 100) * (madR + madRA[tl[1]]) * (cdR + cdRA[tl[1]]) * (1 - mobpdpR * mobpdpRS[tl[0]] * mobpdpRA[tl[1]]) * mdRA[tl[1]]
             slot = int((tl[1] - start) / (end - start) * 340)
             partial_score[slot] += damage[tl[0]] * (multiplier / base_multiplier)
-            if (tl[0] == 6 or tl[0] == 23):
-                partial_autoscore[slot] += damage[tl[0]] * (multiplier / base_multiplier)
+            if Fatal:
+                Fatal_multiplier = 100 * (madR + madRA[tl[1]]) * (cdR + cdRA[tl[1]]) * (1 - mobpdpR * mobpdpRS[tl[0]] * mobpdpRA[tl[1]]) * mdRA[tl[1]]
+                partial_addscore[slot] += damage[tl[0]] * (Fatal_multiplier / base_multiplier)
             detail[indetail[tl[0]]] += damage[tl[0]] * (multiplier / base_multiplier)
-        if detail[20] < 1:
-            res[8] = False
+        if detail[21] < 1:
+            res[10] = False
             print("솔 헤카테 : 스틱스가 발동되지 않았습니다.")
 
         lazy = 0
         for i in range(340):
             partial_score[i] *= 340000 / (end - start)
-            partial_autoscore[i] *= 340000 / (end - start)
+            partial_addscore[i] *= 340000 / (end - start)
             if partial_score[i] < 1:
                 lazy += 1
                 if lazy == 10 and res[8]:
-                    res[8] = False
+                    res[10] = False
                     print("10단위 동안 어떠한 공격도 없었습니다.")
             else:
                 lazy = 0
@@ -537,7 +593,7 @@ with open('nickname.txt', encoding = 'UTF-8') as file:
         for i in range(3):
             plt.axvline(x = ascent[i], color = 'pink', linestyle = 'dashed')
         plt.bar(timepoint, partial_score, width = (end - start) / 340000, color = 'black')
-        #plt.bar(timepoint, partial_autoscore, width = (end - start) / 340000, color = 'green')
+        plt.bar(timepoint, partial_addscore, width = (end - start) / 340000, color = 'green')
         plt.xticks([x * 30 for x in range(13)])
         if PRINTTIMELINE:
             plt.show()
@@ -548,7 +604,7 @@ with open('nickname.txt', encoding = 'UTF-8') as file:
             plt.cla()   # clear the current axes
             plt.clf()   # clear the current figure
             plt.close() # closes the current figure
-        if res[8] == False:
+        if res[10] == False:
             print("해당 리플레이는 순위에서 제외되었습니다.")
 
 wr.writerow(res)
